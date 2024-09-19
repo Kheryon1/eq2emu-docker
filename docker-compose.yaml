@@ -2,6 +2,13 @@ networks:
   backend:
     driver: ${NETWORKS_DRIVER}
 
+# Volumes
+volumes:
+  mysqldbvolume:
+    driver: local
+  certvolume:
+    driver: local
+
 services:
 
   #############################################
@@ -16,15 +23,15 @@ services:
     ports:
       - 3306:3306
     volumes:
-      - ./data:/var/lib/mysql
-      - ./certs:/etc/mysql/certs
+      - mysqldbvolume:/var/lib/mysql
+      - certvolume:/etc/mysql/certs
     environment:
       - MARIADB_DATABASE=${MARIADB_DATABASE}
       - MARIADB_USER=${MARIADB_USER}
       - MARIADB_PASSWORD=${MARIADB_PASSWORD}
       - MARIADB_ROOT_PASSWORD=${MARIADB_ROOT_PASSWORD}
       - MARIADB_ALLOW_EMPTY_PASSWORD=NO
-      - TZ=${TZ:-US/Central}
+      - TZ=${TZ:-DE/Berlin}
     command:
       - --ssl-ca=/etc/mysql/certs/ca.crt
       - --ssl-cert=/etc/mysql/certs/mysql.crt
@@ -40,7 +47,7 @@ services:
   cert-gen:
     image: alpine
     volumes:
-      - ./certs:/certs
+      - certvolume:/certs
     entrypoint:
       - /bin/sh
       - -c
@@ -63,7 +70,7 @@ services:
       context: ./containers/eq2emu-server
     image: emagieq2/eq2emu-server:latest
     volumes:
-      - ./certs:/eq2emu/certs
+      - certvolume:/eq2emu/certs
       - ./eq2emu-editor:/eq2emu/eq2emu-shared-editor
       - /eq2emu/eq2emu/server
     depends_on:
@@ -119,7 +126,7 @@ services:
       - EQ2EDITOR_DB_FILE:${EQ2EDITOR_DB_FILE}
       - MKCERT_URL:${MKCERT_URL}
       - MKCERT_FILE:${MKCERT_FILE}
-      - TZ=${TZ:-US/Central}
+      - TZ=${TZ:-DE/Berlin}
     tty: true
     stdin_open: true
     networks:
@@ -149,6 +156,6 @@ services:
       - DB_NAME:${EQ2EDITOR_DB_NAME}
       - DB_USER:${EQ2EDITOR_DB_USER}
       - DB_PASSWORD:${EQ2EDITOR_DB_PASSWORD}
-      - TZ=${TZ:-US/Central}
+      - TZ=${TZ:-DE/Berlin}
     networks:
       - backend
